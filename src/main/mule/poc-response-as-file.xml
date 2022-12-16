@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0bb1f586-7b22-4fe4-a8c0-639eba693f47">
+        <http:listener-connection host="localhost" port="8081" />
+    </http:listener-config>
+	<flow name="poc-response-as-fileFlow" doc:id="a98f3fc3-aa28-44d9-a320-6a8ac2a413b8" >
+		<http:listener doc:name="Listener" doc:id="530d7046-91fd-4059-9748-762809fb5c55" config-ref="HTTP_Listener_config" path="/file" >
+			<http:response >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Content-Disposition" : vars.contentDisposition
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<ee:transform doc:name="Input" doc:id="abf4036a-241e-4dc1-a1dc-1740868ec4c0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[
+	{
+		"id" : "12345",
+		"product" : "test1",
+		"quantity" : 2,
+		"price" :  100
+	},
+	{
+		"id" : "2222",
+		"product" : "test2",
+		"quantity" : 4,
+		"price" :  200
+	} 
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value='#[%dw 2.0&#10;output application/java&#10;---&#10;"attachment; filename=" ++ "Inventory.csv"]' doc:name="contentDisposition" doc:id="215a64b3-2ad8-4405-bceb-9b23d27cbeca" variableName="contentDisposition"/>
+	</flow>
+</mule>
